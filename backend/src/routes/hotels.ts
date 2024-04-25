@@ -89,7 +89,7 @@ router.post(
     const totalCost = hotel.pricePerNight * numberOfNights;
 
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: totalCost,
+      amount: totalCost * 100,
       currency: "USD",
       metadata: {
         hotelId,
@@ -117,19 +117,20 @@ router.post(
   async (req: Request, res: Response) => {
     try {
       const paymentIntentId = req.body.paymentIntentId;
+
       const paymentIntent = await stripe.paymentIntents.retrieve(
         paymentIntentId as string
       );
 
       if (!paymentIntent) {
-        return res.status(400).json({ message: "Payment intent not found" });
+        return res.status(400).json({ message: "payment intent not found" });
       }
 
       if (
         paymentIntent.metadata.hotelId !== req.params.hotelId ||
         paymentIntent.metadata.userId !== req.userId
       ) {
-        return res.status(400).json({ message: "payment intent mismatch" });
+        return res.status(400).json({ message: "Payment intent mismatch" });
       }
 
       if (paymentIntent.status !== "succeeded") {
@@ -151,13 +152,14 @@ router.post(
       );
 
       if (!hotel) {
-        return res.status(400).json({ message: "Hotel not found" });
+        return res.status(400).json({ message: "hotel not found" });
       }
+
       await hotel.save();
       res.status(200).send();
     } catch (error) {
       console.log(error);
-      res.status(500).json({ message: "Something went wrong" });
+      res.status(500).json({ message: "something went wrong" });
     }
   }
 );
